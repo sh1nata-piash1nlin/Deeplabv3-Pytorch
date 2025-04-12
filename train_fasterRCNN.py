@@ -1,137 +1,139 @@
-from torchvision.models.detection import FasterRCNN
-from torchvision.models.detection import fasterrcnn_mobilenet_v3_large_320_fpn, FasterRCNN_MobileNet_V3_Large_320_FPN_Weights
-from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
-from torchmetrics.detection.mean_ap import MeanAveragePrecision
-from src.dataVOC import VOCDataset
-from torchvision.transforms import ToTensor
-from torch.utils.data import DataLoader
-from src.utils import *
-import torch
-from tqdm import tqdm
-from torch.optim.lr_scheduler import MultiStepLR
-from torch.utils.tensorboard import SummaryWriter
+"""
+@author: Nguyen Duc "sh1nata" Tri <tri14102004@gmail.com>
+"""
+
 import numpy as np
+from torchvision.transforms import ToTensor, Compose, Normalize, Resize
+from src.VOCDataBuild import VOCDataset
+import torch
+from src.utils import *
+from torch.utils.data import DataLoader
+from torch.optim.lr_scheduler import MultiStepLR
+from tqdm import tqdm
+from torch.utils.tensorboard import SummaryWriter
+from torchmetrics.classification import MulticlassAccuracy, MulticlassJaccardIndex
 import shutil
-from pprint import pprint
 
 def collate_fn(batch):
     images, labels = zip(*batch)
     return list(images), list(labels)
 
 def train(args):
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    transform = Compose([
+        Resize((args.image_size, args.image_size)),
+        ToTensor(),
+        Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+    ])
+    target_transform = Resize((args.image_size, args.image_size))
 
-    transform = ToTensor()
-    train_dataset = VOCDataset(root=args.dataPath, year=args.year, image_set="train", download=False, transform=transform)
-    val_dataset = VOCDataset(root=args.dataPath, year=args.year, image_set="val", download=False, transform=transform)
+    train_data= VOCDataset(root=args.dataPath, year=args.year, image_set="train", download=False, transform=transform, target_transform=target_transform)
+    valid_data = VOCDataset(root=args.dataPath, year=args.year, image_set="val", download=False, transform=transform, target_transform=target_transform)
     train_params = {
         "batch_size": args.batch_size,
+        "num_workers": args.num_workers,
         "shuffle": True,
-        "num_workers": args.num_workers,
-        "collate_fn" : collate_fn,
+        "drop_last": False,
     }
-    val_params = {
+    valid_params = {
         "batch_size": args.batch_size,
-        "shuffle": False,
         "num_workers": args.num_workers,
-        "collate_fn" : collate_fn,
+        "shuffle": False,
+        "drop_last": False,
     }
-    train_dataloader = DataLoader(train_dataset, **train_params)
-    val_dataloader = DataLoader(val_dataset, **train_params)
-    model = fasterrcnn_mobilenet_v3_large_320_fpn(weights=FasterRCNN_MobileNet_V3_Large_320_FPN_Weights.DEFAULT)
-    in_channels = model.roi_heads.box_predictor.cls_score.in_features
-    model.roi_heads.box_predictor = FastRCNNPredictor(in_channels=in_channels, num_classes=len(train_dataset.categories))
-    #create optimizer
+    train_dataloader = DataLoader(train_data, **train_params)
+    valid_dataloader = DataLoader(valid_data, **valid_params)
+
+    model = torch.hub.load('pytorch/vision:v0.10.0', 'deeplabv3_mobilenet_v3_large', pretrained=True).to(device)
+    criterion = torch.nn.CrossEntropyLoss()
     optimizer = None
     scheduler = None
+    acc_metric = MulticlassAccuracy(num_classes=len(train_data.classes)).to(device)
+    mIOU_metric = MulticlassJaccardIndex(num_classes=len(train_data.classes)).to(device)
     start_epoch = 0
+    total_iters = len(train_dataloader)
 
     if args.optimizer == "adam":
         optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
     elif args.optimizer == "sgd":
         optimizer = torch.optim.SGD(model.parameters(), lr=1e-2, momentum=args.momentum)
-        scheduler = MultiStepLR(optimizer, milestones=[3, 6, 9], gamma=args.gamma)
-    #continue from this cp
-    if args.continue_cp:
-        checkpoint = torch.load(args.continue_cp, map_location=lambda storage, loc: storage.cude(torch.cuda.current_device()))
+        scheduler = MultiStepLR(optimizer, milestones=[20, 30, 40], gamma=args.gamma)
+
+    if args.continue_cp and os.path.isfile(args.continue_cp):     #continue from this cp if stop training suddenly
+        checkpoint = torch.load(args.continue_cp,
+                                map_location=lambda storage, loc: storage.cuda(torch.cuda.current_device()))
         model.load_state_dict(checkpoint["model_state_dict"])
         start_epoch = checkpoint["epoch"]
-        best_map = checkpoint["map"]
+        best_acc = checkpoint["best_acc"]
+        best_mIOU = checkpoint["best_mIOU"]
     else:
         start_epoch = 0
-        best_map = -1
-
-    model.to(device)
+        best_acc = -1
+        best_mIOU = -1
 
     if os.path.isdir(args.log_folder): # save tensorboard
         shutil.rmtree(args.log_folder)
     os.mkdir(args.log_folder)
     if not os.path.isdir(args.cp_folder): #save checkpoints
         os.mkdir(args.cp_folder)
-
     writer = SummaryWriter(args.log_folder)
 
-    total_iters = len(train_dataloader)
-    #training and validation process
     for epoch in range(start_epoch, args.epochs):
         model.train()
         progress_bar = tqdm(train_dataloader, colour="cyan")
-        train_loss = []  #smoothing the tensorboard visualization
+        all_train_loss = []
         for iter, (images, labels) in enumerate(progress_bar):
+            images = images.to(device)
+            labels = labels.to(device)
+            result = model(images)
+            pred = result['out']
+            loss = criterion(pred, labels)
+            all_train_loss.append(loss.item())
+            avg_loss = np.mean(all_train_loss)
+            progress_bar.set_description("Epoch: {}/{}. Loss: {:0.4f}".format(epoch + 1, args.epochs, avg_loss))
+            writer.add_scalar("Train/Loss", avg_loss, epoch * total_iters + iter)
             optimizer.zero_grad()
-            images = [image.to(device) for image in images]
-            labels = [{"boxes":target["boxes"].to(device), "labels":target["labels"].to(device)} for target in labels]
-            #forward
-            losses = model(images, labels)
-            final_losses = sum([loss for loss in losses.values()])
-            #backward
-            final_losses.backward()
+            loss.backward()
             optimizer.step()
-            progress_bar.set_description("Epoch {}/{}. Loss {:0.4f}".format(epoch+1, args.epochs, final_losses.item()))
-            train_loss.append(final_losses.item())
-            writer.add_scalar("Train/Loss", np.mean(train_loss), epoch*total_iters + iter)
 
         model.eval()
-        progress_bar = tqdm(val_dataloader, color="blue")
-        metric = MeanAveragePrecision(iou_type="bbox")
-        for iter, (images, labels) in enumerate(progress_bar):
-            images = [image.to(device) for image in images]
-            with torch.no_grad():
-                outputs = model(images)
-            preds = []
-            for output in outputs:
-                preds.append({
-                    "boxes": output["boxes"].to("cpu"),
-                    "scores": output["scores"].to("cpu"),
-                    "labels": output["labels"].to("cpu"),
-                })
-            targets = []
-            for label in labels:
-                targets.append({
-                    "boxes": label["boxes"],
-                    "labels": label["labels"],
-                })
-            metric.update(preds, targets)
+        #progress_bar = tqdm(valid_dataloader, colour="green")
+        all_val_loss = []
+        val_acc = []
+        val_mIOU = []
+        with torch.inference_mode():
+            for images, labels in progress_bar:
+                images = images.to(device)
+                labels = labels.to(device)
+                result = model(images)
+                pred = result['out'] # # B, C, H, W  (pred).  B, H, W (gt)
+                loss = criterion(pred, labels)
+                all_val_loss.append(loss.item())
+                val_acc.append(acc_metric(pred, labels).item())
+                val_mIOU.append(mIOU_metric(pred, labels).item())
+                #progress_bar.set_description("Epoch: {}/{}. Loss: {:0.4f}".format(epoch + 1, args.epochs, np.mean(loss.item())))
 
-        result = metric.compute()
-        pprint(result)
-        writer.add_scalar("Val/mAP", result["map"], epoch)
-        writer.add_scalar("Val/mAP_50", result["map_50"], epoch)
-        writer.add_scalar("Val/mAP_75", result["map_75"], epoch)
+        avg_loss = np.mean(all_val_loss)
+        avg_acc = np.mean(val_acc)
+        avg_mIOU = np.mean(val_mIOU)
+        #print("Accuracy: {:0.4f}. mIOU: {:0.4f}".format(avg_acc, avg_mIOU))
+        writer.add_scalar("Validation/Loss", avg_loss, epoch)
+        writer.add_scalar("Validation/Accuracy", avg_acc, epoch)
+        writer.add_scalar("Validation/mIOU", avg_mIOU, epoch)
+
         checkpoint = {
-            "model_state_dict": model.state_dict(),
-            "map": result["map"],
-            "epoch": epoch + 1,
-            "optimizer_state_dict": optimizer.state_dict()
+            "model": model.state_dict(),
+            "optimizer": optimizer.state_dict(),
+            "epoch": epoch,
+            "best_acc": best_acc,
+            "best_mIOU": best_mIOU,
+            # "batch_size": args.batch_size,
         }
-        torch.save(checkpoint, os.path.join(args.cp_folder, "last.pt"))
-        if result["map"] > best_map:
-            best_map = result["map"]
-            torch.save(checkpoint, os.path.join(args.cp_folder, "best.pt"))
-
-
-
-
+        torch.save(checkpoint, os.path.join(args.cp_folder, "lastVOC.pt"))
+        if avg_acc > best_acc and avg_mIOU > best_mIOU:
+            best_mIOU = avg_mIOU
+            best_acc = avg_acc
+            torch.save(checkpoint, os.path.join(args.cp_folder, "bestVOC.pt"))
 
 if __name__ == '__main__':
     train(get_args())
