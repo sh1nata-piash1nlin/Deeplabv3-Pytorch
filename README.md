@@ -26,3 +26,8 @@ If you want to train a new model, you could run:
 ```
 
 # Result of traning: 
+After training 80 epochs: <br>
+Model: deeplabv3_mobilenet_v3_large (could improve further by training 100 epochs) 
+![image](https://github.com/user-attachments/assets/7db2b280-9215-4fad-8486-730f45b631d4)
+
+
