@@ -14,7 +14,8 @@ Here is my pytorch implementation of the model described in the paper **Rethinki
 + tensorboard
 
 # Datasets: 
-I used 2 different datasets: PascalVOC2012 and COCO 
+I used 2 different datasets: PascalVOC2012 and COCO. <br> 
+In my **src** folder, going to the code which relates to the dataset you want to download, changing the parameter **download** into **True** to download the dataset you need. <br>
 
 ```sh
 data
@@ -23,7 +24,6 @@ data
 │   ├── ImageSets
 │   ├── JPEGImages
 │   └── ...
-
 ```
 
 # Training: 
