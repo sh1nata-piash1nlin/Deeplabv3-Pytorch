@@ -62,7 +62,7 @@ def train(args):
     if args.continue_cp and os.path.isfile(args.continue_cp):     #continue from this cp if stop training suddenly
         checkpoint = torch.load(args.continue_cp,
                                 map_location=lambda storage, loc: storage.cuda(torch.cuda.current_device()))
-        model.load_state_dict(checkpoint["model_state_dict"])
+        model.load_state_dict(checkpoint["model"])
         start_epoch = checkpoint["epoch"]
         best_acc = checkpoint["best_acc"]
         best_mIOU = checkpoint["best_mIOU"]
