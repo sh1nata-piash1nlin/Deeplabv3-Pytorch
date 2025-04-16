@@ -1,4 +1,4 @@
-# Deeplabv3-Pytorch
+![image](https://github.com/user-attachments/assets/3a5a08ab-d0a0-44c4-8c65-496a16217ad3)# Deeplabv3-Pytorch
 Semantic Image Segmentation using Deeplabv3
 
 ## Introduction 
@@ -33,9 +33,9 @@ If you want to train a new model, you could run:
 ```
 
 # Result of traning: 
-After training 80 epochs: <br>
-+ Model: deeplabv3_mobilenet_v3_large (could improve further by training 100 epochs) <br>
- 
-![image](https://github.com/user-attachments/assets/7db2b280-9215-4fad-8486-730f45b631d4)
++ Model: deeplabv3_mobilenet_v3_large (epoch = 130, batch_size=2, image_size = (224, 224): <br> 
 
+![image](https://github.com/user-attachments/assets/33afd0bd-236f-4ec7-aa85-24e67159bcd4)
+
++ Model: deeplabv3_resnet101 (epoch = , batch_size=2, image_size = (513, 513)): <br>
 
