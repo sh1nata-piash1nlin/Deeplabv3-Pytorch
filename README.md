@@ -42,5 +42,7 @@ If you want to train with different settings above, for example you can:
   + Without `Add-on data augmentation`: 
 ![image](https://github.com/user-attachments/assets/ffb2d456-7e28-43b7-866f-2d0c06e938ae)
 
+  + With `Add-on data augmentation`: (epoch = 150) 
+
 + Model: deeplabv3_resnet101 (epoch = , batch_size=2, image_size = (513, 513)): <br>
 
