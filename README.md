@@ -25,12 +25,18 @@ data
 │   └── ...
 ```
 
-# Training: 
-If you want to train a new model, you could run:
+# Training Protocol: 
+* **Optimizer and Learning Rate:**
+  + Adam Optimizer with learning rate 0.001. 
+  + SGD Optimizer with different learning rate at different epochs (learning rate 0.01 in most cases).
+If you want to train with different settings above, for example you can: 
 ```sh
-    python trainVOCDataset.py --dataset dataset: For example, python train_voc.py --dataset VOC2012
+    python trainVOCDataset.py -op sgd 
 ```
-
+* **Data Augmentation:**
+  + The default requirments of pytorch (Resize, ToTensor)
+  + Add-on using `Albumentation`: RandomScale, HorizontalFlip, ToTensorV2()
+  
 # Result of traning: 
 + Model: deeplabv3_mobilenet_v3_large (epoch = 130, batch_size=2, image_size = (224, 224)): <br> 
 
