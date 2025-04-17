@@ -5,6 +5,8 @@
 from torchvision.datasets import VOCSegmentation
 import numpy as np
 from torchvision.transforms import ToTensor, Compose, Normalize, Resize
+import albumentations as A
+from albumentations.pytorch import ToTensorV2
 
 class VOCDataset(VOCSegmentation):
     def __init__(self, root, year, image_set, download, transform = None, target_transform=None):
@@ -17,6 +19,7 @@ class VOCDataset(VOCSegmentation):
         image, target = super().__getitem__(item)
         target = np.array(target, np.int64)
         target[target == 255] = 0
+        
         return image, target
 
 if __name__ == '__main__':
