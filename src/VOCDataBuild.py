@@ -16,7 +16,7 @@ class VOCDataset(VOCSegmentation):
     #                        'train', 'tvmonitor']
 
     def __init__(self, root, year, image_set, download, transform = None):
-        super().__init__(root, year, image_set, download, transform, target_transform)
+        super().__init__(root, year, image_set, download, transform)
         self.classes = ['background', 'aeroplane', 'bicycle', 'bird', 'boat', 'bottle', 'bus', 'car', 'cat', 'chair',
                            'cow', 'diningtable', 'dog', 'horse', 'motorbike', 'person', 'pottedplant', 'sheep', 'sofa',
                            'train', 'tvmonitor']
