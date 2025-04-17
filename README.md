@@ -35,7 +35,7 @@ If you want to train with different settings above, for example you can:
 ```
 * **Data Augmentation:**
   + The default requirments of pytorch (Resize, ToTensor)
-  + Add-on using `Albumentation`: RandomScale, HorizontalFlip, ToTensorV2()
+  + Add-on using `Albumentation`: RandomScale, HorizontalFlip, ToTensorV2() which are proposed in the paper.
   
 # Result of training: 
 + Model: deeplabv3_mobilenet_v3_large (epoch = 130, batch_size=2, image_size = (224, 224)): <br> 
