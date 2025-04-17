@@ -13,6 +13,8 @@ from tqdm import tqdm
 from torch.utils.tensorboard import SummaryWriter
 from torchmetrics.classification import MulticlassAccuracy, MulticlassJaccardIndex
 import shutil
+import albumentations as A
+from albumentations.pytorch import ToTensorV2
 
 def collate_fn(batch):
     images, labels = zip(*batch)
@@ -20,15 +22,27 @@ def collate_fn(batch):
 
 def train(args):
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    transform = Compose([
-        Resize((args.image_size, args.image_size)),
-        ToTensor(),
-        Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-    ])
-    target_transform = Resize((args.image_size, args.image_size))
+    # transform = Compose([
+    #     Resize((args.image_size, args.image_size)),
+    #     ToTensor(),
+    #     Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+    # ])
+    # target_transform = Resize((args.image_size, args.image_size))
+    
+    # train_data= VOCDataset(root=args.dataPath, year=args.year, image_set="train", download=False, transform=transform, target_transform=target_transform)
+    # valid_data = VOCDataset(root=args.dataPath, year=args.year, image_set="val", download=False, transform=transform, target_transform=target_transform)
 
-    train_data= VOCDataset(root=args.dataPath, year=args.year, image_set="train", download=False, transform=transform, target_transform=target_transform)
-    valid_data = VOCDataset(root=args.dataPath, year=args.year, image_set="val", download=False, transform=transform, target_transform=target_transform)
+    albumentations_transform = A.Compose([
+        A.RandomScale(scale_limit=(0.5, 2.0), p=1.0),
+        A.HorizontalFlip(p=0.5),
+        A.Resize(args.image_size, args.image_size), 
+        A.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
+        ToTensorV2()
+    ]) 
+    
+    train_data = VOCDataset(root=args.dataPath, year=args.year, image_set="train", download=False, transform=albumentations_transform)
+    valid_data = VOCDataset(root=args.dataPath, year=args.year, image_set="val", download=False, transform=albumentations_transform)
+    
     train_params = {
         "batch_size": args.batch_size,
         "num_workers": args.num_workers,
