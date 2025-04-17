@@ -1,6 +1,6 @@
 Semantic Image Segmentation using Deeplabv3
 
-## Introduction 
+# Introduction 
 Here is my pytorch implementation of the model described in the paper **Rethinking Atrous Convolution for Semantic Image Segmentation** [paper](https://arxiv.org/pdf/1706.05587v3). 
 
 # Requirements: 
@@ -37,7 +37,7 @@ If you want to train with different settings above, for example you can:
   + The default requirments of pytorch (Resize, ToTensor)
   + Add-on using `Albumentation`: RandomScale, HorizontalFlip, ToTensorV2()
   
-# Result of traning: 
+# Result of training: 
 + Model: deeplabv3_mobilenet_v3_large (epoch = 130, batch_size=2, image_size = (224, 224)): <br> 
 
 ![image](https://github.com/user-attachments/assets/ffb2d456-7e28-43b7-866f-2d0c06e938ae)
