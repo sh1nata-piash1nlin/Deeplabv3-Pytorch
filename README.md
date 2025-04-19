@@ -52,4 +52,4 @@ If you want to train with different settings above, for example you can:
 # Experiments: 
 I trained the odel on NVIDIA GeForce GTX 1650 Ti 4gb GPU (which is the config of my laptop).
 
-![image](https://github.com/user-attachments/assets/19b90645-d8f3-476f-b229-c5fef5fb06d8)
+![image](https://github.com/user-attachments/assets/54aa2728-d24a-474c-b35a-f7f388c4d5dd)
