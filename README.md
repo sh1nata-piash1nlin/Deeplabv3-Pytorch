@@ -1,4 +1,4 @@
-Semantic Image Segmentation using Deeplabv3
+![image](https://github.com/user-attachments/assets/a19c9ced-3058-4d7f-b9c7-ead4a9926ce6)Semantic Image Segmentation using Deeplabv3
 
 # Introduction 
 Here is my pytorch implementation of the model described in the paper **Rethinking Atrous Convolution for Semantic Image Segmentation** [paper](https://arxiv.org/pdf/1706.05587v3). 
@@ -52,4 +52,11 @@ If you want to train with different settings above, for example you can:
 # Experiments: 
 I trained the odel on NVIDIA GeForce GTX 1650 Ti 4gb GPU (which is the config of my laptop).
 
-![image](https://github.com/user-attachments/assets/54aa2728-d24a-474c-b35a-f7f388c4d5dd)
++ Result of deeplabv3_mobilenet_v3_large with data augmentation:
+
+![image](https://github.com/user-attachments/assets/e4c22754-e7fa-4cff-8954-e96d816fb739)
+![image](https://github.com/user-attachments/assets/eaba0f46-3ce0-4f99-8732-e9bf7952dc5f)
+![image](https://github.com/user-attachments/assets/42957f79-395d-4349-92ce-6e989ee908e0)
+
+
+
