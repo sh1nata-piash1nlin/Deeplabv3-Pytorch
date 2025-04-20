@@ -45,9 +45,10 @@ If you want to train with different settings above, for example you can:
   + With `Add-on data augmentation`: (epoch = 200) 
 ![image](https://github.com/user-attachments/assets/56d24ef1-9cc1-4f62-8a8a-2ec5a7d9f269)
 
-+ Model: deeplabv3_resnet101 (epoch = , batch_size=2, image_size = (513, 513)): <br>
++ Model: deeplabv3_resnet101 (epoch = 200, batch_size=2, image_size = (513, 513)): <br>
 
 # Testing: 
+By default, my test script will load trained model from folder `trained_models/`. 
 
 # Experiments: 
 I trained the odel on NVIDIA GeForce GTX 1650 Ti 4gb GPU (which is the config of my laptop).
