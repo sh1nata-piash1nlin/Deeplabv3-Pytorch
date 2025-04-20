@@ -1,4 +1,4 @@
-![image](https://github.com/user-attachments/assets/a19c9ced-3058-4d7f-b9c7-ead4a9926ce6)Semantic Image Segmentation using Deeplabv3
+Semantic Image Segmentation using Deeplabv3
 
 # Introduction 
 Here is my pytorch implementation of the model described in the paper **Rethinking Atrous Convolution for Semantic Image Segmentation** [paper](https://arxiv.org/pdf/1706.05587v3). 
